@@ -13,6 +13,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
 //DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("DataSource=MeVerseDb.db"));
