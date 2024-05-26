@@ -17,22 +17,23 @@ public class AppDbContext : IdentityDbContext<User>
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configure one-to-many relationship between ApplicationUser and posts
+        // 1:m entre User e Posts
         modelBuilder.Entity<Post>()
             .HasOne(p => p.User)
             .WithMany(u => u.Posts)
             .HasForeignKey(p => p.UserId);
 
-        // Configure one-to-many relationship between ApplicationUser and comments
+        // 1:m entre User e Comments
         modelBuilder.Entity<Comment>()
             .HasOne(c => c.User)
             .WithMany(u => u.Comments)
             .HasForeignKey(c => c.UserId);
 
-        // Configure many-to-many relationship between users for followers and following
+        // m:m entre User Followers e Following
         modelBuilder.Entity<User>()
             .HasMany(u => u.Followers)
             .WithMany(u => u.Following)
+            //Configura A tabela para join
             .UsingEntity<Dictionary<string, object>>(
                 "UserFollowers",
                 u => u.HasOne<User>().WithMany().HasForeignKey("FollowerId"),
@@ -43,16 +44,11 @@ public class AppDbContext : IdentityDbContext<User>
                     j.ToTable("UserFollowers");
                 });
 
-        // Configure one-to-many relationship between user and posts
-        modelBuilder.Entity<Post>()
-            .HasOne(p => p.User)
-            .WithMany(u => u.Posts)
-            .HasForeignKey(p => p.UserId);
-
-        // Configure many-to-many relationship between users and liked posts
+        // m:m entre Users e LikedPosts
         modelBuilder.Entity<User>()
             .HasMany(u => u.LikedPosts)
             .WithMany(p => p.LikedByUsers)
+            //Join
             .UsingEntity<Dictionary<string, object>>(
                 "UserLikedPosts",
                 u => u.HasOne<Post>().WithMany().HasForeignKey("PostId"),
@@ -63,13 +59,13 @@ public class AppDbContext : IdentityDbContext<User>
                     j.ToTable("UserLikedPosts");
                 });
 
-        // Configure one-to-many relationship between post and comments
+        // 1:m entre Posts e comenários
         modelBuilder.Entity<Comment>()
             .HasOne(c => c.Post)
             .WithMany(p => p.Comments)
             .HasForeignKey(c => c.PostId);
 
-        // Configure many-to-many relationship between users and liked comments
+        // m:m entre commentários e Likes
         modelBuilder.Entity<User>()
             .HasMany(u => u.LikedComments)
             .WithMany(c => c.LikedByUsers)
