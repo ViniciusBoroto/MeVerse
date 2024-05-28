@@ -22,6 +22,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 //DIs
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IPostRepository, PostRepository>();
+
+//Mapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 //Swagger Auth
 builder.Services.AddSwaggerGen(c =>
