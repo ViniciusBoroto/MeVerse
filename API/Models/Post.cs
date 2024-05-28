@@ -16,6 +16,6 @@ public class Post
     public required string UserId { get; set; }
     public required string Text { get; set; }
     public DateTime CreationDate { get; set; } = DateTime.Now;
-    public ICollection<User> LikedByUsers { get; set; } = new List<User>();
-    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public ICollection<string> LikedByUserIds { get; set; } = new List<string>();
+    public ICollection<int> CommentIds { get; set;  } = new List<int>();
 }

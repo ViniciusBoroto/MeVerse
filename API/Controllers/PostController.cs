@@ -51,5 +51,12 @@ public class PostController : ControllerBase
     {
         return await _repo.DeleteAsync(id);
     }
+
+    [Authorize]
+    [HttpPost("{id:int}/like")]
+    public async Task<ActionResult<Post>> AddLike(int id)
+    {
+        var _repo
+    }
   
 }
