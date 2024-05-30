@@ -1,5 +1,7 @@
 ﻿using API.Interfaces;
 using API.Models;
+using API.Models.DTOs;
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,58 +12,45 @@ public class PostRepository : IPostRepository
     private readonly AppDbContext _context;
     private readonly DbSet<Post> _posts;
     private readonly UserManager<User> _userManager;
-    public PostRepository(AppDbContext context, UserManager<User> userManager)
+    private readonly IMapper _mapper;
+    public PostRepository(AppDbContext context, UserManager<User> userManager, IMapper mapper)
     {
         _context = context;
         _posts = _context.Set<Post>();
         _userManager = userManager;
+        _mapper = mapper;
+    }
+    public async Task<IEnumerable<Post>> GetAllAsync()
+    {
+        return await _posts.Include(p => p.User).Include(p => p.LikedByUsers).Take(10).ToListAsync();
     }
 
-    public async Task<Post> CreateAsync(string userId, string text)
+    public async Task<Post?> GetByIdAsync(int id)
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        var post = new Post { User = user, UserId = userId, Text = text };
+        return await _posts.Include(p => p.User).Include(p => p.LikedByUsers).FirstOrDefaultAsync(p => p.PostId == id);
+    }
+
+    public async Task<Post> CreateAsync(Post post)
+    {
         await _posts.AddAsync(post);
         _context.SaveChanges();
         return post;
     }
 
-    public async Task<Post> DeleteAsync(int id)
+    public async Task<Post> DeleteAsync(Post post)
     {
-        var post = await _posts.FindAsync(id);
         _posts.Remove(post);
         await _context.SaveChangesAsync();
         return post;
     }
 
-    public async Task<IEnumerable<Post>> GetAllAsync()
-    {
-        return await _posts.Include(p => p.User).Take(10).ToListAsync();
-    }
 
-    public async Task<Post> GetByIdAsync(int id)
+    public async Task<Post> LikeAsync(Post post, User user)
     {
-        return await _posts.Include(p => p.User).FirstOrDefaultAsync(p => p.PostId == id);
-    }
-
-    public async Task<Post> AddLikeAsync(Post post, string userId)
-    {
-        var user = await _userManager.FindByIdAsync(userId);
         if (post.LikedByUsers.Contains(user))
-        {
             post.LikedByUsers.Remove(user);
-            return (false, post);
-        }
-
-        post.LikedByUsers.Add(user);
-        _posts.Entry(post).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
-        return (true, post);
-    }
-
-    public async Task<Post> RemoveLikeAsync(Post post, User user)
-    {
-        post.LikedByUsers.Remove(user);
+        else
+            post.LikedByUsers.Add(user);
         _posts.Entry(post).State = EntityState.Modified;
         await _context.SaveChangesAsync();
         return post;

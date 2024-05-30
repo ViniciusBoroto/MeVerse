@@ -5,6 +5,7 @@ using API.Models.DTOs;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -15,10 +16,12 @@ public class PostController : ControllerBase
 {
     private readonly IPostRepository _repo;
     private readonly IMapper _mapper;
-    public PostController(IPostRepository repo, IMapper mapper)
+    private readonly UserManager<User> _userManager;
+    public PostController(IPostRepository repo,UserManager<User> userManager, IMapper mapper)
     {
         _repo = repo;
         _mapper = mapper;
+        _userManager = userManager;
     }
 
     [Authorize]
@@ -26,15 +29,30 @@ public class PostController : ControllerBase
     public async Task<ActionResult<IEnumerable<Post>>> GetAll()
     {
         var posts = await _repo.GetAllAsync();
-        return Ok(posts.Select(p => _mapper.Map<Post, PostViewModel>(p)));
+        var user = await GetUser();
+        var postsDTO = posts.Select(p =>
+        {
+            var post = mapPost(p);
+            if (p.LikedByUsers.Contains(user))
+                post.Liked = true;
+            return post;
+        });
+        return Ok(posts);
     }
     
     [Authorize]
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<Post>> GetById(int id)
+    public async Task<ActionResult<PostViewModel>> GetById(int id)
     {
         var post = await _repo.GetByIdAsync(id);
-        return Ok(_mapper.Map<Post, PostViewModel>(post));
+        if (post is null)
+        {
+            return NotFound();
+        }
+        var postDTO = mapPost(post);
+        if (post.LikedByUsers.Contains(await GetUser()))
+            postDTO.Liked = true;
+        return Ok(postDTO);
     }
 
     [Authorize]
@@ -43,28 +61,41 @@ public class PostController : ControllerBase
     {
         if (text == String.Empty)
             return BadRequest();
-
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var post = await _repo.CreateAsync(userId, text);
-        return Ok(_mapper.Map<Post, PostViewModel>(post));
+        var user = await GetUser();
+        var post = new Post { User = user, UserId = user.Id, Text = text };
+        post = await _repo.CreateAsync(post);
+        return Ok(mapPost(post));
     }
 
     [Authorize]
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<Post>> Delete(int id)
     {
-        return Ok(_mapper.Map<Post, PostViewModel>(await _repo.DeleteAsync(id)));
+        var post = await _repo.GetByIdAsync(id);
+        if ( post is null)
+        {
+            return NotFound();
+        }
+        return Ok(mapPost(await _repo.DeleteAsync(post)));
     }
 
     [Authorize]
     [HttpPost("like/{id:int}")]
-    public async Task<ActionResult<Post>> AddLike(int id)
+    public async Task<ActionResult<Post>> Like(int id)
     {
         var post = await _repo.GetByIdAsync(id);
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        bool added = await _repo.AddLikeAsync(post, userId);
-        if (added) return Ok();
-        return Ok(_mapper.Map<Post, PostViewModel>(post));
+        var user = await GetUser();
+        post = await _repo.LikeAsync(post, user);
+        return Ok(mapPost(post));
     }
-  
+
+    private async Task<User?> GetUser()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return await _userManager.FindByIdAsync(userId);
+    }
+    private PostViewModel mapPost(Post post)
+    {
+        return _mapper.Map<Post, PostViewModel>(post);
+    }
 }
