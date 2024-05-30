@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace API.Controllers;
-[Route("api/[controller]")]
+[Route("api/posts")]
 [ApiController]
 public class PostController : ControllerBase
 {
@@ -57,12 +57,13 @@ public class PostController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("{id:int}/like")]
+    [HttpPost("like/{id:int}")]
     public async Task<ActionResult<Post>> AddLike(int id)
     {
         var post = await _repo.GetByIdAsync(id);
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        await _repo.AddLikeAsync(post, userId);
+        bool added = await _repo.AddLikeAsync(post, userId);
+        if (added) return Ok();
         return Ok(_mapper.Map<Post, PostViewModel>(post));
     }
   

@@ -13,6 +13,6 @@ public class MappingProfiles : Profile
             // configure and s is the source that will map to d
             .ForMember(d => d.User, o => o.MapFrom(s => new UserViewModel { UserName = s.User.UserName, ProfileImagePath = s.User.ProfileImagePath }))
             .ForMember(d => d.Text, o => o.MapFrom(s => s.Text))
-            .ForMember(d => d.LikeAmount, o => o.MapFrom(s => s.LikedByUsers.Count())) ;
+            .ForMember(d => d.LikeAmount, o => o.MapFrom(s => s.LikedByUsers.Count()));
     }
 }

@@ -36,25 +36,27 @@ public class PostRepository : IPostRepository
 
     public async Task<IEnumerable<Post>> GetAllAsync()
     {
-        var posts = await _posts.Take(10).ToListAsync();
-        posts.ForEach(async p => p.User = await _userManager.FindByIdAsync(p.UserId));
-        return posts;
+        return await _posts.Include(p => p.User).Take(10).ToListAsync();
     }
 
     public async Task<Post> GetByIdAsync(int id)
     {
-        var post = await _posts.FindAsync(id);
-        post.User = await _userManager.FindByIdAsync(post.UserId);
-        return post;
+        return await _posts.Include(p => p.User).FirstOrDefaultAsync(p => p.PostId == id);
     }
 
     public async Task<Post> AddLikeAsync(Post post, string userId)
     {
         var user = await _userManager.FindByIdAsync(userId);
+        if (post.LikedByUsers.Contains(user))
+        {
+            post.LikedByUsers.Remove(user);
+            return (false, post);
+        }
+
         post.LikedByUsers.Add(user);
         _posts.Entry(post).State = EntityState.Modified;
         await _context.SaveChangesAsync();
-        return post;
+        return (true, post);
     }
 
     public async Task<Post> RemoveLikeAsync(Post post, User user)
