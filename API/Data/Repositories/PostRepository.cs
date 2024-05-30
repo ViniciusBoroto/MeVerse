@@ -63,7 +63,9 @@ public class PostRepository : IPostRepository
 
     public async Task<PostViewModel?> DeleteAsync(int id)
     {
-        var post = await _posts.Include(p => p.User).FirstOrDefaultAsync(p => p.PostId == id);
+        var post = await _posts
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.PostId == id);
         if (post is null) return null;
         _posts.Remove(post);
         await _context.SaveChangesAsync();
@@ -73,7 +75,9 @@ public class PostRepository : IPostRepository
 
     public async Task<PostViewModel> LikeAsync(int postId, User user)
     {
-        var post = await _posts.Include(p => p.LikedByUsers).FirstOrDefaultAsync(p => p.PostId == postId);
+        var post = await _posts
+            .Include(p => p.LikedByUsers)
+            .FirstOrDefaultAsync(p => p.PostId == postId);
 
         if (post.LikedByUsers.Any(u => u.Id == user.Id))
         {
