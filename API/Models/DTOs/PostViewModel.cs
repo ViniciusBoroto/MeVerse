@@ -8,7 +8,8 @@ public class PostViewModel
     public required int PostId { get; set; }
     public required UserViewModel User { get; set; }
     public required string Text { get; set; }
-    public required int LikeAmount { get; set; }
-    public bool Liked { get; set; } = false;
+    public IEnumerable<UserViewModel> LikedByUsers { get; set; } = new List<UserViewModel>();
+    public required int Likes { get; set; } = 0;
+    public bool UserLiked { get; set; } = false;
 
 }
