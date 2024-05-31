@@ -109,8 +109,7 @@ public class PostRepository : IPostRepository
                     Id = u.Id,
                     UserName = u.UserName,
                     ProfileImagePath = u.ProfileImagePath
-                }
-                    ).ToList(),
+                }).ToList(),
             Likes = post.LikedByUsers.Count(),
             Text = post.Text,
             UserLiked = post.LikedByUsers.Any(l => l.Id == userId)

@@ -79,6 +79,4 @@ public class AppDbContext : IdentityDbContext<User>
                     j.ToTable("UserLikedComments");
                 });
     }
-
-
 }
