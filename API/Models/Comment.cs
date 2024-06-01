@@ -9,7 +9,7 @@ public class Comment
     public required Post Post { get; set; }
     public required int PostId { get; set; }
     public int? ParentCommentId { get; set; }
-    public Comment? ParentComment { get; set; }
+    public Comment? ParentComment { get; set; } = null;
     public ICollection<User> LikedByUsers { get; set; } = new List<User>();
     public ICollection<Comment> Replies { get; set; } = new List<Comment>();
     public DateTime CreationDate { get; set; } = DateTime.Now;
