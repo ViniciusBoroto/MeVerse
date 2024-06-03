@@ -18,38 +18,39 @@ public class CommentRepository : ICommentRepository
         _userManager = userManager;
     }
 
-    public async Task<CommentViewModel> CreateAsync(Comment comment)
+    public async Task<CommentViewModel?> CreateAsync(Comment comment)
     {
         await _comments.AddAsync(comment);
         await _context.SaveChangesAsync();
         return Map(comment);
     }
 
-    public async Task<Comment?> DeleteAsync(int id)
+    public async Task<CommentViewModel?> DeleteAsync(int id)
     {
         var comment = await _comments.FindAsync(id);
         if (comment == null) return null;
         _comments.Remove(comment);
         await _context.SaveChangesAsync();
-        return comment;
+        return Map(comment);
         
     }
 
-    public async Task<IEnumerable<Comment>> GetByCommentAsync(int parentId)
+    public async Task<IEnumerable<CommentViewModel?>> GetByCommentAsync(int parentId)
     {
         return await _comments
             .AsNoTracking()
             .Where(c => c.ParentCommentId == parentId)
             .Take(5)
+            .Select(c => Map(c))
             .ToListAsync();
     }
 
-    public async Task<Comment?> GetByIdAsync(int id)
+    public async Task<CommentViewModel?> GetByIdAsync(int id)
     {
-        return await _comments.FindAsync(id);
+        return Map(await _comments.FindAsync(id));
     }
 
-    public async Task<IEnumerable<CommentViewModel>> GetByPostAsync(int postId)
+    public async Task<IEnumerable<CommentViewModel?>> GetByPostAsync(int postId)
     {
         return await _comments
             .AsNoTracking()
@@ -59,16 +60,18 @@ public class CommentRepository : ICommentRepository
             .ToListAsync();
     }
 
-    private CommentViewModel Map(Comment comment)
+    private CommentViewModel? Map(Comment? comment)
     {
+        if (comment is null) return null;
         return new CommentViewModel
         {
             CommentId = comment.Id,
             UserId = comment.UserId,
+            PostId = comment.PostId,
             Text = comment.Text,
             ParentCommentId = comment.ParentCommentId,
-            Likes = comment.LikedByUsers.Count,
-            PostId = comment.PostId
+            CommentsQuantity = comment.Replies.Count,
+            Likes = comment.LikedByUsers.Count
         };
     }
 }
